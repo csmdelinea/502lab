@@ -3,6 +3,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddReverseProxy()
        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+builder.Logging.AddLog4Net();
+
 builder.Services.AddTunnelServices();
 
 var app = builder.Build();
