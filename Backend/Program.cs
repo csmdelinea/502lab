@@ -1,3 +1,5 @@
+using System.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.WebHost.UseKestrel(options =>
@@ -29,5 +31,18 @@ var app = builder.Build();
 
 
 app.MapReverseProxy();
+
+app.UseWhen(context => context.Request.Path.Value?.Contains("/api/health") == true, applicationBuilder =>
+{
+    applicationBuilder.UseWebSockets();
+
+});
+app.MapGet("/api/health", (HttpContext context) =>
+{
+    return HttpStatusCode.OK;
+});
+
+   
+
 
 app.Run();

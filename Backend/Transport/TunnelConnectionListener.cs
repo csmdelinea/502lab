@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using log4net;
 using Microsoft.AspNetCore.Connections;
 
 /// <summary>
@@ -11,6 +12,7 @@ internal class TunnelConnectionListener : IConnectionListener
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TunnelOptions _options;
     private readonly CancellationTokenSource _closedCts = new();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(TunnelConnectionListener));
     private readonly HttpMessageInvoker _httpMessageInvoker = new(new SocketsHttpHandler
     {
         EnableMultipleHttp2Connections = true,
@@ -23,6 +25,7 @@ internal class TunnelConnectionListener : IConnectionListener
         _options = options;
         _connectionLock = new(options.MaxConnectionCount);
         EndPoint = endpoint;
+
 
         if (endpoint is not UriEndPoint2)
         {
@@ -75,6 +78,8 @@ internal class TunnelConnectionListener : IConnectionListener
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    Log.Error($"Could not connect to {Uri}", ex);
+                   // _logger.LogInformation("Could not connect");
                     // TODO: More sophisticated backoff and retry
                     await Task.Delay(5000, cancellationToken);
                 }
