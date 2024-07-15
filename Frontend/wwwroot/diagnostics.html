@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Diagnostics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+<body>
+
+
+    <h2>Routes</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Route Id</th>
+            <th>Match</th>
+            <th>Cluster Id</th>
+        </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach:routes -->
+            <tr>
+                <td data-bind="text:routeId"></td>
+                <td data-bind="text: match.path"></td>
+                <td data-bind="text: clusterId"></td>
+            </tr>
+            <!-- /ko-->
+
+        </tbody>
+    </table>
+
+    <h2>Tunnels</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr><th>Tunnels</th></tr>
+        </thead>
+        <tbody data-bind="foreach: tunnels">
+            <tr>
+                <td data-bind="text: $data"></td>
+
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Clusters</h2>
+    <table class="table table-striped">
+        <thead>
+        <th scope="col">Destination</th>
+        <th scope="col">Address</th>
+
+        </thead>
+        <tbody>
+            <!-- ko foreach:clusters -->
+            <!--ko foreach: { data: Object.keys(destinations)}-->
+            <tr>
+                <td data-bind="text: $data"></td>
+                <td data-bind="text: $parent.destinations[$data].address"></td>
+            </tr>
+            <!-- /ko -->
+            <!-- /ko -->
+
+        </tbody>
+    </table>
+    <h2>Vaults</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tenant Id</th>
+                <th>Vault Id</th>
+                <th>Server Names</th>
+                <th>Created</th>
+                <th>Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: hybridVaultLocations -->
+            <tr>
+                <td data-bind="text: tenantId"></td>
+                <td data-bind="text: vaultId"></td>
+                <td data-bind="text: serverNames"></td>
+                <td data-bind="text: createdOn"></td>
+                <td data-bind="text: modifiedOn"></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+
+    </table>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.8.1/rxjs.umd.min.js" integrity="sha512-D9LDs8YUUVa4V9Gl4Zb+xqRAc7RCzooR3+zzebgK2RMu/KU+dh90pbjEEMzPiSyRSGbSp9j1pZnrO4joGa5WEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js" integrity="sha512-1LyBPWtezbX0LO4X4QzhfZd9jSetVu5W0IFpMV9ecq4lJUQBR6hx8uiNfUI2Aoe7LCF4rK1NV3rY+uil4VJ3QQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="diagnostics.js"></script>
+</body>
+</html>
