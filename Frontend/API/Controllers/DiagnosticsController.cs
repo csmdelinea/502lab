@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Frontend.Monitor;
+using Microsoft.AspNetCore.Mvc;
 using Yarp.ReverseProxy.Configuration;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,10 +12,13 @@ namespace Frontend.API.Controllers
     {
 
         private readonly IProxyConfigProvider _proxyConfigProvider;
+        private readonly HealthMonitor _healthMonitor;
 
-        public DiagnosticsController(IProxyConfigProvider proxyConfigProvider)
+        public DiagnosticsController(IProxyConfigProvider proxyConfigProvider,
+            HealthMonitor healthMonitor)
         {
             _proxyConfigProvider = proxyConfigProvider;
+            _healthMonitor = healthMonitor;
         }
 
 
@@ -24,8 +28,16 @@ namespace Frontend.API.Controllers
         {
             var config = _proxyConfigProvider.GetConfig();
             var result = new DiagnosticsViewModel();
-            result.Clusters = config.Clusters.ToList();
-            result.Routes = config.Routes.ToList();
+            result.Clusters = config.Clusters.Select(n => new ClusterConfigModel
+            {
+                Model = n,
+                LastHealthyProbeUtc = _healthMonitor.MonitorStats.SingleOrDefault(o => o.Id == n.ClusterId)?.LastHealthy
+            }).ToList();
+            result.Routes = config.Routes.Select(n => new RouteConfigModel
+            {
+                Model = n,
+                LastHealthyProbeUtc = _healthMonitor.MonitorStats.SingleOrDefault(o => o.Id == n.ClusterId)?.LastHealthy
+            }).ToList();
             result.Tunnels = new List<string> { "Tunnel 1", "Tunnel 2" };
             result.HybridVaultLocations = new List<HybridVaultLocationModel>
             {
@@ -83,8 +95,8 @@ namespace Frontend.API.Controllers
         public class DiagnosticsViewModel
         {
             public List<string> Tunnels { get; set; } = new List<string>();
-            public List<RouteConfig> Routes { get; set; } = new List<RouteConfig>();
-            public List<ClusterConfig> Clusters { get; set; } = new List<ClusterConfig>();
+            public List<RouteConfigModel> Routes { get; set; } = new List<RouteConfigModel>();
+            public List<ClusterConfigModel> Clusters { get; set; } = new List<ClusterConfigModel>();
             public List<HybridVaultLocationModel> HybridVaultLocations { get; set; } = new List<HybridVaultLocationModel>();
         }
 
@@ -117,6 +129,18 @@ namespace Frontend.API.Controllers
 
 
 
+        }
+
+        public class ClusterConfigModel
+        {
+            public ClusterConfig Model { get; set; }
+            public DateTime? LastHealthyProbeUtc { get; set; }
+        }
+
+        public class RouteConfigModel
+        {
+            public RouteConfig Model { get; set; }
+            public DateTime? LastHealthyProbeUtc { get; set; }
         }
 
     }

@@ -30,10 +30,10 @@ app.MapWebSocketTunnel("/connect-ws");
 // to avoid exteranl traffic hitting it
 app.MapHttp2Tunnel("/connect-h2");
 
-app.MapGet("/api/health", () =>
-{
-    return HttpStatusCode.OK;
-});
+//app.MapGet("/api/health", () =>
+//{
+//    return HttpStatusCode.OK;
+//});
 
 app.UseStaticFiles();
 app.UseRouting();

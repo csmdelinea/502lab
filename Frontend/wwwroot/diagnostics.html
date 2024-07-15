@@ -11,18 +11,20 @@
     <h2>Routes</h2>
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>Route Id</th>
-            <th>Match</th>
-            <th>Cluster Id</th>
-        </tr>
+            <tr>
+                <th>Route Id</th>
+                <th>Match</th>
+                <th>Cluster Id</th>
+                <th scope="col">Last Probe</th>
+            </tr>
         </thead>
         <tbody>
             <!-- ko foreach:routes -->
             <tr>
-                <td data-bind="text:routeId"></td>
-                <td data-bind="text: match.path"></td>
-                <td data-bind="text: clusterId"></td>
+                <td data-bind="text:model.routeId"></td>
+                <td data-bind="text: model.match.path"></td>
+                <td data-bind="text: model.clusterId"></td>
+                <td data-bind="text: lastHealthyProbeUtc"></td>
             </tr>
             <!-- /ko-->
 
@@ -51,10 +53,11 @@
         </thead>
         <tbody>
             <!-- ko foreach:clusters -->
-            <!--ko foreach: { data: Object.keys(destinations)}-->
+            <!--ko foreach: { data: Object.keys(model.destinations)}-->
             <tr>
                 <td data-bind="text: $data"></td>
-                <td data-bind="text: $parent.destinations[$data].address"></td>
+                <td data-bind="text: $parent.model.destinations[$data].address"></td>
+
             </tr>
             <!-- /ko -->
             <!-- /ko -->

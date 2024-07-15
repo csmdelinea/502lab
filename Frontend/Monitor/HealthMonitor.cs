@@ -5,59 +5,27 @@ namespace Frontend.Monitor
 {
     public class HealthMonitor
     {
+        public List<HealthMonitorStats> MonitorStats { get; set; } = new List<HealthMonitorStats>();
 
-        private readonly IProxyConfigProvider _proxyConfigProvider;
-        private readonly ILogger<HealthMonitor> _logger;
-        private readonly IAvailableDestinationsPolicy _availableDestinationsPolicy;
-        private readonly IActiveHealthCheckMonitor _activeHealthCheckMonitor;
-
-        public HealthMonitor(IProxyConfigProvider proxyConfigProvider, ILogger<HealthMonitor> logger, IActiveHealthCheckMonitor activeHealthCheckMonitor, IAvailableDestinationsPolicy availableDestinationsPolicy)
+        public void UpdateHealth(string id)
         {
-            _proxyConfigProvider = proxyConfigProvider;
-            _logger = logger;
-            _activeHealthCheckMonitor = activeHealthCheckMonitor;
-            _availableDestinationsPolicy = availableDestinationsPolicy;
-        }
+           var target =  MonitorStats.SingleOrDefault(n => n.Id == id);
+           if (target == null)
+           {
+               target = new HealthMonitorStats { Id = id };
+               MonitorStats.Add(target);
+           }
 
-
-        public void StartMonitor()
-        {
-            Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), CheckHealth));
-        }
-
-        async Task RunPeriodicTaskAsync(TimeSpan interval, Func<Task> action)
-        {
-            while (true)
-            {
-                var delayTask = Task.Delay(interval);
-                await delayTask;
-                await action();
-
-            }
-        }
-
-        async Task CheckHealth()
-        {
-            if (_proxyConfigProvider.GetConfig().ChangeToken.HasChanged)
-            {
-                var y = "x";
-            }
-            //var cb = _proxyConfigProvider.GetConfig().ChangeToken.RegisterChangeCallback((s) =>
-            //{
-            //    var x = "Y";
-            //},null);
-            foreach (var routeConfig in _proxyConfigProvider.GetConfig().Routes)
-            {
-                var x = routeConfig;
-            }
-            foreach (var clusterConfig in _proxyConfigProvider.GetConfig().Clusters)
-            {
-               
-                var x = clusterConfig;
-                //clusterConfig.HealthCheck
-            }
-
+           target.LastHealthy=DateTime.UtcNow;
+           
 
         }
     }
+
+    public class HealthMonitorStats
+    {
+        public string Id { get; set; }
+        public DateTime? LastHealthy { get; set; }
+    }
+
 }
