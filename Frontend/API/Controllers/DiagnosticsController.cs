@@ -1,6 +1,12 @@
-﻿using Frontend.Monitor;
+﻿using System.Collections.ObjectModel;
+using Frontend.Monitor;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
 using Yarp.ReverseProxy.Configuration;
+using Yarp.ReverseProxy.Forwarder;
+using Yarp.ReverseProxy.Model;
+using System.Diagnostics.Metrics;
+using Yarp.ReverseProxy.Health;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,11 +20,17 @@ namespace Frontend.API.Controllers
         private readonly IProxyConfigProvider _proxyConfigProvider;
         private readonly HealthMonitor _healthMonitor;
 
+
+        private readonly DiagnosticsService _diagnosticsService;
+        private readonly IProbingRequestFactory _probingRequestFactory;
+
         public DiagnosticsController(IProxyConfigProvider proxyConfigProvider,
-            HealthMonitor healthMonitor)
+            HealthMonitor healthMonitor, DiagnosticsService diagnosticsService, IProbingRequestFactory probingRequestFactory)
         {
             _proxyConfigProvider = proxyConfigProvider;
             _healthMonitor = healthMonitor;
+            _diagnosticsService = diagnosticsService;
+            _probingRequestFactory = probingRequestFactory;
         }
 
 
@@ -31,6 +43,7 @@ namespace Frontend.API.Controllers
             result.Clusters = config.Clusters.Select(n => new ClusterConfigModel
             {
                 Model = n,
+                HealthCheckLink = $"https://localhost:7244/api/v1/healthcheck",
                 LastHealthyProbeUtc = _healthMonitor.MonitorStats.SingleOrDefault(o => o.Id == n.ClusterId)?.LastHealthy
             }).ToList();
             result.Routes = config.Routes.Select(n => new RouteConfigModel
@@ -68,15 +81,37 @@ namespace Frontend.API.Controllers
 
         // GET api/<DiagnosticsController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<HealthCheckResultViewModel> Get(string id)
         {
-            return "value";
+
+            if (!_diagnosticsService.ClusterProbingDictionary.ContainsKey(id))
+                return new HealthCheckResultViewModel();
+
+            var probe = _diagnosticsService.ClusterProbingDictionary[id];
+            var request = _probingRequestFactory.CreateRequest(probe.ClusterModel, probe.DestinationModel);
+
+            var response = await probe.ClusterModel.HttpClient.SendAsync(request, CancellationToken.None);
+            //var request = _myProbingRequestFactory.CreateRequest(id);
+            if (request != null)
+            {
+                
+            }
+            
+            //var httpClient = _httpClientFactory.CreateClient(new ForwarderHttpClientContext
+            //{
+            //    ClusterId = newClusterState.ClusterId,
+            //    NewConfig = incomingCluster.HttpClient ?? HttpClientConfig.Empty,
+            //    NewMetadata = incomingCluster.Metadata
+            //});
+
+            return new HealthCheckResultViewModel { IsHealthy = true, LastHealthyProbeUtc = DateTime.UtcNow};
         }
 
         // POST api/<DiagnosticsController>
         [HttpPost]
         public void Post([FromBody] string value)
         {
+
         }
 
         // PUT api/<DiagnosticsController>/5
@@ -135,11 +170,18 @@ namespace Frontend.API.Controllers
         {
             public ClusterConfig Model { get; set; }
             public DateTime? LastHealthyProbeUtc { get; set; }
+            public string HealthCheckLink { get; set; }
         }
 
         public class RouteConfigModel
         {
             public RouteConfig Model { get; set; }
+            public DateTime? LastHealthyProbeUtc { get; set; }
+        }
+
+        public class HealthCheckResultViewModel
+        {
+            public bool IsHealthy { get; set; }
             public DateTime? LastHealthyProbeUtc { get; set; }
         }
 

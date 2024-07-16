@@ -15,7 +15,7 @@
                 <th>Route Id</th>
                 <th>Match</th>
                 <th>Cluster Id</th>
-                <th scope="col">Last Probe</th>
+
             </tr>
         </thead>
         <tbody>
@@ -24,7 +24,7 @@
                 <td data-bind="text:model.routeId"></td>
                 <td data-bind="text: model.match.path"></td>
                 <td data-bind="text: model.clusterId"></td>
-                <td data-bind="text: lastHealthyProbeUtc"></td>
+
             </tr>
             <!-- /ko-->
 
@@ -49,7 +49,8 @@
         <thead>
         <th scope="col">Destination</th>
         <th scope="col">Address</th>
-
+        <th scope="col">Last Health Probe</th>
+        <th></th>
         </thead>
         <tbody>
             <!-- ko foreach:clusters -->
@@ -57,7 +58,13 @@
             <tr>
                 <td data-bind="text: $data"></td>
                 <td data-bind="text: $parent.model.destinations[$data].address"></td>
+                <td>
+                    <span data-bind="text: $parent.lastHealthyProbeUtc"></span>
 
+                </td>
+                <td>
+                    <button data-bind="click: function(data, event) { $root.queryHealth($parent,event) }">Query Health</button>
+                </td>
             </tr>
             <!-- /ko -->
             <!-- /ko -->

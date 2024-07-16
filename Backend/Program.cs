@@ -32,14 +32,17 @@ var app = builder.Build();
 
 app.MapReverseProxy();
 
-app.UseWhen(context => context.Request.Path.Value?.Contains("/api/health") == true, applicationBuilder =>
-{
-    applicationBuilder.UseWebSockets();
+//app.UseWhen(context => context.Request.Path.Value?.Contains("/api/health") == true, applicationBuilder =>
+//{
+//    applicationBuilder.UseWebSockets();
 
-});
-app.MapGet("/api/health", (HttpContext context) =>
+//});
+app.MapGet("/api/health",async (HttpContext context) =>
 {
-    return HttpStatusCode.OK;
+    var client = new HttpClient();
+    var request = new Uri("http://localhost/api/v1/healthcheck");
+    var response = await client.GetAsync(request);
+    return response;
 });
 
    

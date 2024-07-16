@@ -7,7 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddReverseProxy()
        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+builder.Services.AddSingleton<DiagnosticsService>();
 
+builder.Services.AddSingleton<IProbingRequestFactory, MyProbingRequestFactory>();
 builder.Services.AddControllers();
 
 builder.Logging.AddLog4Net();

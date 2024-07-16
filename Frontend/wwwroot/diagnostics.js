@@ -1,27 +1,32 @@
 ﻿const { ajax, defer, fromEvent, interval, filter, map, catchError, of } = rxjs;
+var viewModel = {}
 
-
-const url = '/api/diagnostics';
-
-const getData = (url) => {
+function getApiData(url) {
     return ajax.ajax.getJSON(url).pipe(
         map(response => response),
         catchError(error => {
             console.error('Error: ', error);
-            return of(error); 
+            return of(error);
         })
     );
-};
-
-
-var viewModel = {}
-
-function getDestiunations() {
-    console.log('here');
 }
-getData(url).subscribe({
+const getViewModel = getApiData('/api/diagnostics');
+const checkHealth = (clusterId) => getApiData(`/api/diagnostics/${clusterId}`); 
+
+getViewModel.subscribe({
     next: data => {
-        viewModel = ko.mapping.fromJS(data);
+        viewModel = ko.mapping.fromJS(data);        
+        viewModel.queryHealth = function (options, event) {
+
+            checkHealth(options.model.clusterId()).subscribe({
+                next: health => {
+                    if(health.isHealthy)
+                        options.lastHealthyProbeUtc(health.lastHealthyProbeUtc);
+                    else
+                        options.lastHealthyProbeUtc('Failed');
+                }
+            })
+        };
         ko.applyBindings(viewModel);
     },
     error: err => console.error('Error: ', err),
