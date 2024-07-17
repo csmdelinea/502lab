@@ -23,20 +23,21 @@ internal class TunnelClientFactory : ForwarderHttpClientFactory
         base.ConfigureHandler(context, handler);
 
         var previous = handler.ConnectCallback ?? DefaultConnectCallback;
-
+        //var previous = handler.ConnectCallback;
         static async ValueTask<Stream> DefaultConnectCallback(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
         {
-            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-            try
-            {
-                await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
-                return new NetworkStream(socket, ownsSocket: true);
-            }
-            catch
-            {
-                socket.Dispose();
-                throw;
-            }
+            throw new NotImplementedException();
+            //var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            //try
+            //{
+            //    await socket.ConnectAsync(context.DnsEndPoint, cancellationToken);
+            //    return new NetworkStream(socket, ownsSocket: true);
+            //}
+            //catch
+            //{
+            //    socket.Dispose();
+            //    throw;
+            //}
         }
 
         handler.ConnectCallback = async (context, cancellationToken) =>
