@@ -1,16 +1,20 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.Extensions.Logging;
+using Shared.Logging;
 
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
-internal class TunnelConnectionListener : IConnectionListener
+public class TunnelConnectionListener : IConnectionListener
 {
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TunnelOptions _options;
     private readonly CancellationTokenSource _closedCts = new();
+
     private readonly HttpMessageInvoker _httpMessageInvoker = new(new SocketsHttpHandler
     {
         EnableMultipleHttp2Connections = true,
@@ -24,7 +28,7 @@ internal class TunnelConnectionListener : IConnectionListener
         _connectionLock = new(options.MaxConnectionCount);
         EndPoint = endpoint;
 
-        if (endpoint is not UriEndPoint2)
+        if (endpoint is not UriEndPoint)
         {
             throw new NotSupportedException($"UriEndPoint is required for {options.Transport} transport");
         }
@@ -32,7 +36,7 @@ internal class TunnelConnectionListener : IConnectionListener
 
     public EndPoint EndPoint { get; }
 
-    private Uri Uri => ((UriEndPoint2)EndPoint).Uri!;
+    private Uri Uri => ((UriEndPoint)EndPoint).Uri!;
 
     public async ValueTask<ConnectionContext?> AcceptAsync(CancellationToken cancellationToken = default)
     {
@@ -68,20 +72,27 @@ internal class TunnelConnectionListener : IConnectionListener
 
                         // Allow more connections in
                         _connectionLock.Release();
-                    },
-                    cancellationToken);
-
+                    }, cancellationToken);
+              
+          
                     return connection;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    var message = ex.Message;
+                    if (ex is WebSocketException)
+                        message = $"{nameof(TunnelConnectionListener)} - Unable to create websocket connection to {Uri}: {ex.Message}";
                     // TODO: More sophisticated backoff and retry
+                    LoggingExtensions.Logger.LogError(ex,message);
+
                     await Task.Delay(5000, cancellationToken);
                 }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException operationCanceledException)
         {
+            var message = $"{nameof(TunnelConnectionListener)} - {operationCanceledException.Message}";
+            LoggingExtensions.Logger.LogError(operationCanceledException,message);
             return null;
         }
     }

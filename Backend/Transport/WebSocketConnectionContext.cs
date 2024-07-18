@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Connections.Client;
+using Shared.Logging;
 
 internal class WebSocketConnectionContext : HttpConnection
 {
@@ -51,6 +52,7 @@ internal class WebSocketConnectionContext : HttpConnection
             {
                 underlyingWebSocket = new ClientWebSocket();
                 underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                LoggingExtensions.Logger.LogInformation(LoggingExtensions.GetWrappedMessage($"Establishing websocket connection to {uri}"));
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);
                 return underlyingWebSocket;
             }

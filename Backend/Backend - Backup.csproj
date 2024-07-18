@@ -4,20 +4,18 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>90372b72-a7ff-4941-90e2-a075fbec94fb</UserSecretsId>
+    <UserSecretsId>aaca8751-4e4c-43a9-bb7c-d7697c250d79</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="6.0.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0" />
+
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ReverseProxy\Yarp.ReverseProxy.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

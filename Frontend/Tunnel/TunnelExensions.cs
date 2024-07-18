@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using Shared.Logging;
+using System.Net.WebSockets;
 using Yarp.ReverseProxy.Forwarder;
 
 public static class TunnelExensions
@@ -48,12 +49,17 @@ public static class TunnelExensions
     {
         var conventionBuilder = routes.MapGet(path, static async (HttpContext context, string host, TunnelClientFactory tunnelFactory, IHostApplicationLifetime lifetime) =>
         {
+
+            LoggingExtensions.Logger.LogInformation(LoggingExtensions.GetWrappedMessage($"Attempting Websocket connection from {context.Connection.RemoteIpAddress?.ToString()}"));
+
             if (!context.WebSockets.IsWebSocketRequest)
             {
                 return Results.BadRequest();
             }
 
             var (requests, responses) = tunnelFactory.GetConnectionChannel(host);
+
+            LoggingExtensions.Logger.LogInformation(LoggingExtensions.GetWrappedMessage($"Websocket connection from {context.Connection.RemoteIpAddress?.ToString()} established"));
 
             await requests.Reader.ReadAsync(context.RequestAborted);
 

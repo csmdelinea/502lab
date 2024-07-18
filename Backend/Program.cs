@@ -1,3 +1,5 @@
+using Shared.Logging;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.WebHost.UseKestrel(options =>
@@ -26,7 +28,7 @@ builder.WebHost.UseTunnelTransport(url, options =>
 });
 
 var app = builder.Build();
-
+ApplicationLogging.LoggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 
 app.MapReverseProxy();
 

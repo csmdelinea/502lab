@@ -4,6 +4,7 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>7ff71cc0-b264-4033-86c9-c7f027b692bc</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReverseProxy\Yarp.ReverseProxy.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>
