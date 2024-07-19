@@ -1,12 +1,15 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using log4net;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.Extensions.Logging.Log4Net.AspNetCore.Extensions;
 
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
 /// </summary>
 internal class TunnelConnectionListener : IConnectionListener
 {
+    private static readonly ILog log = LogManager.GetLogger(typeof(TunnelConnectionListener));
     private readonly SemaphoreSlim _connectionLock;
     private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
     private readonly TunnelOptions _options;
@@ -28,6 +31,8 @@ internal class TunnelConnectionListener : IConnectionListener
         {
             throw new NotSupportedException($"UriEndPoint is required for {options.Transport} transport");
         }
+        
+        Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(15), KillConnections));
     }
 
     public EndPoint EndPoint { get; }
@@ -58,14 +63,16 @@ internal class TunnelConnectionListener : IConnectionListener
 
                     // Track this connection lifetime
                     _connections.TryAdd(connection, connection);
-
+                    log.DebugFormat("Added connection for {0} with connection id {1}",Uri,connection.ConnectionId);
                     _ = Task.Run(async () =>
                     {
                         // When the connection is disposed, release it
+                        //csm does this really wait until disposed? I dont know
                         await connection.ExecutionTask;
 
                         _connections.TryRemove(connection, out _);
 
+                        log.DebugFormat("Removing connection for {0} with connection id {1}", Uri, connection.ConnectionId);
                         // Allow more connections in
                         _connectionLock.Release();
                     },
@@ -115,4 +122,29 @@ internal class TunnelConnectionListener : IConnectionListener
 
         return ValueTask.CompletedTask;
     }
+
+    async Task RunPeriodicTaskAsync(TimeSpan interval, Func<Task> action)
+    {
+        while (true)
+        {
+            var delayTask = Task.Delay(interval);
+            await action();
+            await delayTask;
+        }
+    }
+
+    async Task KillConnections()
+    {
+        //await  UnbindAsync();
+        if (!_connections.Any())
+            return;
+
+        await UnbindAsync();
+        //foreach (var connectionContext in _connections)
+        //{
+        //    connectionContext.Value.Abort();
+        //}
+    }
+
+    
 }

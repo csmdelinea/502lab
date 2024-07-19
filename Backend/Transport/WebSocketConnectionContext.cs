@@ -7,10 +7,11 @@ internal class WebSocketConnectionContext : HttpConnection
 {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
-
+    private readonly string? _connectionId;
     private WebSocketConnectionContext(HttpConnectionOptions options) : 
         base(options, null)
     {
+        _connectionId = Guid.NewGuid().ToString();
     }
 
     public override CancellationToken ConnectionClosed
@@ -18,6 +19,10 @@ internal class WebSocketConnectionContext : HttpConnection
         get => _cts.Token;
         set { }
     }
+
+    
+    //csm we are skipping negotiations so set this as it will be null otherwise
+    public override string? ConnectionId => _connectionId;
 
     public override void Abort()
     {
