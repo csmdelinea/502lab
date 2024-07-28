@@ -1,11 +1,12 @@
 ﻿using System.IO.Pipelines;
 using System.Net;
+using Backend.Transport;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Features;
 /// <summary>
 /// This exists solely to track the lifetime of the connection
 /// </summary>
-internal class TrackLifetimeConnectionContext : ConnectionContext
+public class TrackLifetimeConnectionContext : ConnectionContext
 {
     private readonly ConnectionContext _connection;
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -13,6 +14,9 @@ internal class TrackLifetimeConnectionContext : ConnectionContext
     public TrackLifetimeConnectionContext(ConnectionContext connection)
     {
         _connection = connection;
+        
+        
+    
     }
 
     public Task ExecutionTask => _executionTcs.Task;
@@ -54,20 +58,24 @@ internal class TrackLifetimeConnectionContext : ConnectionContext
         get => _connection.ConnectionClosed;
         set => _connection.ConnectionClosed = value;
     }
-
+    
     public override void Abort()
     {
+
         _connection.Abort();
     }
 
     public override void Abort(ConnectionAbortedException abortReason)
     {
+       
         _connection.Abort(abortReason);
     }
 
     public override ValueTask DisposeAsync()
     {
+
         _executionTcs.TrySetResult();
+        
         return _connection.DisposeAsync();
     }
 }

@@ -1,4 +1,13 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using ToRefactor;
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MinRequestBodyDataRate = null;
+});
 
 builder.Services.AddReverseProxy()
        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
@@ -6,6 +15,8 @@ builder.Services.AddReverseProxy()
 builder.Logging.AddLog4Net();
 
 builder.Services.AddTunnelServices();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -18,4 +29,11 @@ app.MapWebSocketTunnel("/connect-ws");
 // to avoid exteranl traffic hitting it
 app.MapHttp2Tunnel("/connect-h2");
 
+app.UseStaticFiles();
+app.UseRouting();
+app.MapControllers();
+ConnectionMonitorService.StartMonitor();
+//Task.Run(() => TunnelExensions.StartCleanup());
+
 app.Run();
+//Task.WaitAll([TunnelExensions.StartCleanup(),app.RunAsync()]);

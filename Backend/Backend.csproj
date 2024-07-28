@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReverseProxy\Yarp.ReverseProxy.csproj" />
+    <ProjectReference Include="..\ToRefactor\ToRefactor.csproj" />
   </ItemGroup>
 
 </Project>

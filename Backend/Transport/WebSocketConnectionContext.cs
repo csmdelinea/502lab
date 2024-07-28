@@ -1,17 +1,25 @@
 ﻿using System.Net.WebSockets;
+using Backend.Transport;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Connections.Client;
 
-internal class WebSocketConnectionContext : HttpConnection
+public class WebSocketConnectionContext : HttpConnection
 {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
     private readonly string? _connectionId;
-    private WebSocketConnectionContext(HttpConnectionOptions options) : 
+    private readonly Uri _connectionUri;
+    private readonly string _connectionTrackingId;
+
+    public WebSocketConnectionContext(HttpConnectionOptions options, Uri connectionUri) :
         base(options, null)
     {
+
+        this._connectionUri = connectionUri;
+
         _connectionId = Guid.NewGuid().ToString();
+     
     }
 
     public override CancellationToken ConnectionClosed
@@ -20,24 +28,34 @@ internal class WebSocketConnectionContext : HttpConnection
         set { }
     }
 
-    
+
+    public WebSocket? UnderlyingWebSocket=>_underlyingWebSocket;
+    //public string ContextConnectionId { get; set; }
+    public Uri ConnectionUri => _connectionUri;
+
     //csm we are skipping negotiations so set this as it will be null otherwise
-    public override string? ConnectionId => _connectionId;
+    public override string? ConnectionId
+    {
+        get { return _connectionId; }
+    }
 
     public override void Abort()
     {
+
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
     }
 
     public override void Abort(ConnectionAbortedException abortReason)
     {
+       
         _cts.Cancel();
         _underlyingWebSocket?.Abort();
     }
 
     public override ValueTask DisposeAsync()
     {
+     
         // REVIEW: Why doesn't dispose just work?
         Abort();
 
@@ -55,13 +73,15 @@ internal class WebSocketConnectionContext : HttpConnection
             WebSocketFactory = async (context, cancellationToken) =>
             {
                 underlyingWebSocket = new ClientWebSocket();
-                underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(25);
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);
+                
                 return underlyingWebSocket;
             }
         };
-
-        var connection = new WebSocketConnectionContext(options);
+        
+        var connection = new WebSocketConnectionContext(options,uri);
+        
         await connection.StartAsync(TransferFormat.Binary, cancellationToken);
         connection._underlyingWebSocket = underlyingWebSocket;
         return connection;

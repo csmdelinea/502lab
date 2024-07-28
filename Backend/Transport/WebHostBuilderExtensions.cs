@@ -1,5 +1,6 @@
 ﻿
 using System;
+using Backend.Transport;
 using Microsoft.AspNetCore.Connections;
 
 public static class WebHostBuilderExtensions
@@ -10,7 +11,24 @@ public static class WebHostBuilderExtensions
 
         hostBuilder.ConfigureKestrel(options =>
         {
-            options.Listen(new UriEndPoint2(new Uri(url)));
+            
+            options.Listen(new UriEndPoint2(new Uri(url)), options =>
+            {
+                options.Use((context, next) =>
+                 {
+                     
+                     //var tlsFeature = context.Features.Get<ITlsHandshakeFeature>()!;
+
+                     //if (tlsFeature.CipherAlgorithm == CipherAlgorithmType.Null)
+                     //{
+                     //    throw new NotSupportedException(
+                     //        $"Prohibited cipher: {tlsFeature.CipherAlgorithm}");
+                     //}
+                     
+
+                     return next();
+                 });
+            });
         });
 
         return hostBuilder.ConfigureServices(services =>
@@ -23,4 +41,6 @@ public static class WebHostBuilderExtensions
             }
         });
     }
+
+
 }
