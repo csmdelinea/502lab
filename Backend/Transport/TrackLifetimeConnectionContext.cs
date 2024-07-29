@@ -1,6 +1,5 @@
 ﻿using System.IO.Pipelines;
 using System.Net;
-using Backend.Transport;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Features;
 /// <summary>
@@ -14,9 +13,6 @@ public class TrackLifetimeConnectionContext : ConnectionContext
     public TrackLifetimeConnectionContext(ConnectionContext connection)
     {
         _connection = connection;
-        
-        
-    
     }
 
     public Task ExecutionTask => _executionTcs.Task;
@@ -58,24 +54,20 @@ public class TrackLifetimeConnectionContext : ConnectionContext
         get => _connection.ConnectionClosed;
         set => _connection.ConnectionClosed = value;
     }
-    
+
     public override void Abort()
     {
-
         _connection.Abort();
     }
 
     public override void Abort(ConnectionAbortedException abortReason)
     {
-       
         _connection.Abort(abortReason);
     }
 
     public override ValueTask DisposeAsync()
     {
-
         _executionTcs.TrySetResult();
-        
         return _connection.DisposeAsync();
     }
 }
