@@ -13,6 +13,7 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable, 
     private CancellationTokenSource _disposeTokenSource = new();
     private readonly object _sync = new();
     private readonly string _contextConnectionId;
+    private int _disposeCount;
     private static readonly ILog log = LogManager.GetLogger(typeof(WebSocketStream));
     public WebSocketStream(string contextConnectionId,WebSocket ws)
     {
@@ -73,22 +74,18 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable, 
 
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
+        var currentDisposeCount = _disposeCount;
+        var result = await _ws.ReceiveAsync(buffer, cancellationToken);
 
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposeTokenSource.Token);
+        // If the read is a zero-byte read and the stream has been disposed since the read started,
+        // we throw an exception to stop the caller from messing with the stream
+        if (buffer.Length == 0 && currentDisposeCount != _disposeCount)
+        {
+            throw new OperationCanceledException("Stream has been disposed.");
+        }
 
-        var result = await _ws.ReceiveAsync(buffer, linkedCts.Token);
-
-        //string message = Encoding.UTF8.GetString(buffer.ToArray(), 0, result.Count);
-        //if (message == "ping")
-        //{
-        //        var x = "Y";
-        //    return 0;
-        //}
-        ConnectionTrackingLogger.LogMessage<WebSocketStream>(ContextConnectionId,$"Received {result.MessageType}");
         if (result.MessageType == WebSocketMessageType.Close)
         {
-
-            //log.DebugFormat("Connection Tracking - Received WebSocketMessageType.Close for ContextConnectionId {0}",ContextConnectionId);
             return 0;
         }
 
@@ -132,6 +129,8 @@ internal class WebSocketStream : Stream, IValueTaskSource<object?>, ICloseable, 
                 return;
             }
 
+            // Increase the disposed count to throw exceptions in pending zero byte reads that started before the stream was disposed
+            _disposeCount++;
             // Cancel the token to signal the read loop to stop
             _disposeTokenSource.Cancel();
             _disposeTokenSource.Dispose();
