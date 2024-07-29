@@ -8,7 +8,7 @@ internal class WebSocketConnectionContext : HttpConnection
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
 
-    private WebSocketConnectionContext(HttpConnectionOptions options) :
+    private WebSocketConnectionContext(HttpConnectionOptions options) : 
         base(options, null)
     {
     }

@@ -1,12 +1,12 @@
 using System.Net;
-using Backend.Transport;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseKestrel(options =>
-{
-    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(15);
-});
+//builder.WebHost.UseKestrel(options =>
+//{
+//    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(15);
+//});
 
 builder.Services.AddReverseProxy()
        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
@@ -28,7 +28,7 @@ builder.WebHost.UseTunnelTransport(url, options =>
 builder.Services.AddControllers();
 
 var app = builder.Build();
-app.UseExceptionHandlingMiddleware();
+
 
 app.MapReverseProxy();
 
