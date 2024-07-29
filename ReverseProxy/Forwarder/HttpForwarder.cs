@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 #if NET8_0_OR_GREATER
 using Microsoft.AspNetCore.Http.Timeouts;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
+
 using Yarp.ReverseProxy.Utilities;
 
 namespace Yarp.ReverseProxy.Forwarder;
@@ -613,6 +615,8 @@ internal sealed class HttpForwarder : IHttpForwarder
     private async ValueTask<ForwarderError> HandleRequestFailureAsync(HttpContext context, StreamCopyHttpContent? requestContent, Exception requestException,
         HttpTransformer transformer, ActivityCancellationTokenSource requestCancellationSource, bool failedDuringRequestCreation)
     {
+        _logger.LogError(requestException,requestException.Message);
+
         var triedRequestBody = requestContent?.ConsumptionTask.IsCompleted == true;
 
         if (requestCancellationSource.CancelledByLinkedToken)
@@ -667,6 +671,7 @@ internal sealed class HttpForwarder : IHttpForwarder
 
         async ValueTask<ForwarderError> ReportErrorAsync(ForwarderError error, int statusCode)
         {
+
             ReportProxyError(context, error, requestException);
             context.Response.StatusCode = statusCode;
 
@@ -945,9 +950,9 @@ internal sealed class HttpForwarder : IHttpForwarder
 
     private void ReportProxyError(HttpContext context, ForwarderError error, Exception ex)
     {
-        _logger.LogError(ex, $"Connection: {context.Connection.Id}, Host: {context.Request.Path}, Path: {context.Request.Path}, QueryString: {context.Request.QueryString} - {ex.Message}");
         context.Features.Set<IForwarderErrorFeature>(new ForwarderErrorFeature(error, ex));
         Log.ErrorProxying(_logger, error, ex);
+        _logger.LogError(ex, $"Connection: {context.Connection.Id}, Host: {context.Request.Path}, Path: {context.Request.Path}, QueryString: {context.Request.QueryString} - {ex.Message}");
         ForwarderTelemetry.Log.ForwarderFailed(error);
     }
 
