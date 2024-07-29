@@ -53,7 +53,7 @@ namespace Backend.Monitor
 
         void StartMonitor()
         {
-        Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorClose()));
+        //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorClose()));
             //Task.WaitAll([RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => SendPings())]);
         }
 

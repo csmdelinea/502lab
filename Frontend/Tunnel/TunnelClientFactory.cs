@@ -69,7 +69,7 @@ internal class TunnelClientFactory : ForwarderHttpClientFactory
 
                         continue;
                     }
-                    _streams.Add(stream);
+                    //_streams.Add(stream);
 
                     return stream;
                 }

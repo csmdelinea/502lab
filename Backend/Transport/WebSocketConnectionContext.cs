@@ -57,7 +57,7 @@ public class WebSocketConnectionContext : HttpConnection
     {
      
         // REVIEW: Why doesn't dispose just work?
-        Abort();
+     //   Abort();
 
         return base.DisposeAsync();
     }
@@ -73,7 +73,7 @@ public class WebSocketConnectionContext : HttpConnection
             WebSocketFactory = async (context, cancellationToken) =>
             {
                 underlyingWebSocket = new ClientWebSocket();
-                underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(25);
+                underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);
                 
                 return underlyingWebSocket;

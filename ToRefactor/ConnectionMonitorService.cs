@@ -20,7 +20,7 @@ namespace ToRefactor
 
         public static void StartMonitor()
         {
-            Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorConnections()));
+            //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorConnections()));
         }
         public static void UpsertWebsocket(string key, WebSocket webSocket)
         {
