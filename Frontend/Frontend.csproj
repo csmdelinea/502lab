@@ -14,8 +14,6 @@
     <ProjectReference Include="..\ReverseProxy\Yarp.ReverseProxy.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
+
 
 </Project>
