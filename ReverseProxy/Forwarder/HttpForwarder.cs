@@ -945,6 +945,7 @@ internal sealed class HttpForwarder : IHttpForwarder
 
     private void ReportProxyError(HttpContext context, ForwarderError error, Exception ex)
     {
+        _logger.LogError(ex, $"Connection: {context.Connection.Id}, Host: {context.Request.Path}, Path: {context.Request.Path}, QueryString: {context.Request.QueryString} - {ex.Message}");
         context.Features.Set<IForwarderErrorFeature>(new ForwarderErrorFeature(error, ex));
         Log.ErrorProxying(_logger, error, ex);
         ForwarderTelemetry.Log.ForwarderFailed(error);
