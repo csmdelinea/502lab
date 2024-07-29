@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http.Features;
 /// <summary>
 /// This exists solely to track the lifetime of the connection
 /// </summary>
-internal class TrackLifetimeConnectionContext : ConnectionContext
+public class TrackLifetimeConnectionContext : ConnectionContext
 {
     private readonly ConnectionContext _connection;
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
