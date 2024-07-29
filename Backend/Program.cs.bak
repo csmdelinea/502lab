@@ -1,11 +1,11 @@
+using System.Net;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.WebHost.UseKestrel(options =>
 //{
-//    options.
-//});//builder.WebHost.UseKestrel(options =>
-//{
-//    options.
+//    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(15);
 //});
 
 builder.Services.AddReverseProxy()
@@ -25,9 +25,20 @@ builder.WebHost.UseTunnelTransport(url, options =>
     options.Transport = url.Contains("connect-h2") ? TransportType.HTTP2 : TransportType.WebSockets;
 });
 
+//builder.Services.AddControllers();
+
 var app = builder.Build();
 
 
 app.MapReverseProxy();
+
+//app.UseStaticFiles();
+//app.UseRouting();
+//app.MapControllers();
+
+app.MapGet("/Turtles", (HttpContext context) =>
+{
+    return "Ok";
+});
 
 app.Run();
