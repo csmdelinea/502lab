@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Channels;
+using ToRefactor;
 using Yarp.ReverseProxy.Forwarder;
 
 /// <summary>
@@ -26,7 +27,7 @@ internal class TunnelClientFactory : ForwarderHttpClientFactory
     protected override void ConfigureHandler(ForwarderHttpClientContext context, SocketsHttpHandler handler)
     {
         base.ConfigureHandler(context, handler);
-
+        
         var previous = handler.ConnectCallback ?? DefaultConnectCallback;
 
         static async ValueTask<Stream> DefaultConnectCallback(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
@@ -57,21 +58,29 @@ internal class TunnelClientFactory : ForwarderHttpClientFactory
                 
                 // Ask for a connection
                 await requests.Writer.WriteAsync(0, cancellationToken);
-
-                while (true)
+                Stream stream;
+                try
                 {
-                   var stream = await responses.Reader.ReadAsync(cancellationToken);
-                   //var stream = responses.Reader.WaitToReadAsync(cancellationToken);
-                    if (stream is ICloseable c && c.IsClosed)
+                    while (true)
                     {
-                        // Ask for another connection
-                        await requests.Writer.WriteAsync(0, cancellationToken);
+                        stream = await responses.Reader.ReadAsync(cancellationToken);
+                        //var stream = responses.Reader.WaitToReadAsync(cancellationToken);
+                        if (stream is ICloseable c && c.IsClosed)
+                        {
+                            // Ask for another connection
+                            await requests.Writer.WriteAsync(0, cancellationToken);
 
-                        continue;
+                            continue;
+                        }
+                        //_streams.Add(stream);
+
+                        return stream;
                     }
-                    //_streams.Add(stream);
-
-                    return stream;
+                }
+                catch (Exception ex)
+                {
+                    //ConnectionTrackingLogger.LogException<TunnelClientFactory>(ex,"None",$"Exception during Connect Callback");
+                    throw;
                 }
             }
             return await previous(context, cancellationToken);

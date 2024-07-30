@@ -1,3 +1,5 @@
+using ToRefactor;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.WebHost.UseKestrel(options =>
@@ -30,7 +32,16 @@ var app = builder.Build();
 app.UseStaticFiles();
 app.UseRouting();
 app.MapControllers();
+//app.UseHttpLogging();
+app.MapReverseProxy(proxyPipeline =>
+{
+    // Use a custom proxy middleware, defined below
+    proxyPipeline.Use(DiagnosticPipeline.DiagnosticPipelineStep);
+    // Don't forget to include these two middleware when you make a custom proxy pipeline (if you need them).
+    proxyPipeline.UseSessionAffinity();
+    proxyPipeline.UseLoadBalancing();
+});
 
-app.MapReverseProxy();
+//app.MapReverseProxy();
 
 app.Run();

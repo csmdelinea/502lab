@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using ToRefactor;
+//using ToRefactor;
 using Yarp.ReverseProxy.Utilities;
 
 namespace Yarp.ReverseProxy.Forwarder;
@@ -616,7 +616,7 @@ internal sealed class HttpForwarder : IHttpForwarder
         HttpTransformer transformer, ActivityCancellationTokenSource requestCancellationSource, bool failedDuringRequestCreation)
     {
 
-        ConnectionTrackingLogger.LogException<HttpForwarder>(requestException,context.Connection.Id,$"Error received trying to get {context.Request.GetDisplayUrl()}");
+       // ConnectionTrackingLogger.LogException<HttpForwarder>(requestException,context.Connection.Id,$"Error received trying to get {context.Request.GetDisplayUrl()}");
 var triedRequestBody = requestContent?.ConsumptionTask.IsCompleted == true;
 
         if (requestCancellationSource.CancelledByLinkedToken)
