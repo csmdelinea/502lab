@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using Backend.Monitor;
 using Microsoft.AspNetCore.Connections;
 
 /// <summary>
@@ -58,7 +59,7 @@ internal class TunnelConnectionListener : IConnectionListener
 
                     // Track this connection lifetime
                     _connections.TryAdd(connection, connection);
-
+                    ConnectionMonitor.Instance.AddConnection(connection);
                     _ = Task.Run(async () =>
                     {
                         // When the connection is disposed, release it

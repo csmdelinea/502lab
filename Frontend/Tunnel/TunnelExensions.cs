@@ -87,7 +87,7 @@ public static class TunnelExensions
             //    _sockets.Add(socketModel);
             //    _webSockets.TryAdd(socketModel.Id, ws);
             //}
-            ConnectionMonitorService.UpsertWebsocket(context.Connection.Id,ws);
+            ConnectionMonitorService.UpsertWebsocket(context,ws);
             //ConnectionMonitorService.
             var stream = new WebSocketStream(context.Connection.Id,ws);
             

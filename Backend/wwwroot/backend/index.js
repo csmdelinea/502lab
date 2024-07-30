@@ -14,7 +14,7 @@ const getConnections = () => {
 
 
 function closeSocket(id) {
-    const url = `/api/Frontend/CloseSocket/${id()}`
+    const url = `/api/Backend/CloseSocket/${id()}`
     ajax.ajax.put(url).pipe(
         map(response => response),
         catchError(error => {
@@ -24,7 +24,11 @@ function closeSocket(id) {
     ).subscribe({
         next: data => {
             console.log(data);
-            
+            var item = viewModel.connections().filter((n) => n.id() === data.response.id);
+            if (item) {
+                item[0].socketState(data.response.socketState);
+
+            }
         },
         error: err => console.error('Error: ', err),
         complete: () => console.log('Request complete')
@@ -32,6 +36,28 @@ function closeSocket(id) {
 
 }
 
+function abortSocket(id) {
+    const url = `/api/Backend/AbortSocket/${id()}`
+    ajax.ajax.put(url).pipe(
+        map(response => response),
+        catchError(error => {
+            console.error('Error: ', error);
+            return of(error);
+        })
+    ).subscribe({
+        next: data => {
+            console.log(data);
+            var item = viewModel.connections().filter((n) => n.id() === data.response.id);
+            if (item) {
+                item[0].socketState(data.response.socketState);
+
+            }
+        },
+        error: err => console.error('Error: ', err),
+        complete: () => console.log('Request complete')
+    });
+
+}
 
 var viewModel = {};
 
@@ -44,3 +70,4 @@ getConnections().subscribe({
     complete: () => console.log('Request complete')
 });
 
+                s

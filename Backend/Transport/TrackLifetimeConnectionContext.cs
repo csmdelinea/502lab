@@ -5,23 +5,31 @@ using Microsoft.AspNetCore.Http.Features;
 /// <summary>
 /// This exists solely to track the lifetime of the connection
 /// </summary>
-internal class TrackLifetimeConnectionContext : ConnectionContext
+public class TrackLifetimeConnectionContext : ConnectionContext
 {
     private readonly ConnectionContext _connection;
     private readonly TaskCompletionSource _executionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
+    private string _connectionId;
     public TrackLifetimeConnectionContext(ConnectionContext connection)
     {
         _connection = connection;
+        _connectionId = Guid.NewGuid().ToString();
+
+     //   _connection.ConnectionId= Guid.NewGuid().ToString();
     }
 
     public Task ExecutionTask => _executionTcs.Task;
 
     public override string ConnectionId
     {
-        get => _connection.ConnectionId;
-        set => _connection.ConnectionId = value;
+        get => _connectionId;
+        set => _connectionId = value;
     }
+    //public override string ConnectionId
+    //{
+    //    get => _connection.ConnectionId;
+    //    set => _connection.ConnectionId = value;
+    //}
 
     public override IFeatureCollection Features => _connection.Features;
 

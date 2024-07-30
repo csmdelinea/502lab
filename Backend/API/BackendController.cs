@@ -1,67 +1,63 @@
-﻿//using Backend.Monitor;
-//using Microsoft.AspNetCore.Mvc;
+﻿using Backend.Monitor;
+using Microsoft.AspNetCore.Mvc;
+using ToRefactor;
 
-//// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-//namespace Backend.API
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    public class BackendController : ControllerBase
-//    {
-//        // GET: api/<BackendController>
-//        [HttpGet]
-//        public IEnumerable<ConnectionViewModel> Get()
-//        {
-//            var connections = ConnectionMonitor.Instance.GetConnections();
-//          var result = connections.Select(FromConnection).ToList();
+namespace Backend.API
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BackendController : ControllerBase
+    {
+        // GET: api/<BackendController>
+        [HttpGet]
+        public IEnumerable<ConnectionViewModel> Get()
+        {
+            var connections = ConnectionMonitor.Instance.GetConnections();
+            var result = connections.Select(FromConnection).ToList();
 
-//            //contexts.Where(n => n.UnderlyingWebSocket != null).Select(n => n.UnderlyingWebSocket.)
-//            return result;
-//        }
+            //contexts.Where(n => n.UnderlyingWebSocket != null).Select(n => n.UnderlyingWebSocket.)
+            return result;
+        }
 
-//        // GET api/<BackendController>/5
-//        [HttpGet("{id}")]
-//        public string Get(int id)
-//        {
-//            return "value";
-//        }
+        [HttpPut("CloseSocket/{id}")]
+        public async Task<IActionResult> CloseSocket(string id, CancellationToken token)
+        {
+            var connections = ConnectionMonitor.Instance.GetConnections();
+            var selected = connections.Single(n => n.ConnectionId == id);
+            await ConnectionMonitor.Instance.CloseConnection(selected);
+            return Ok(FromConnection(selected));
+        }
 
-//        // POST api/<BackendController>
-//        [HttpPost]
-//        public void Post([FromBody] string value)
-//        {
-//        }
+        [HttpPut("AbortSocket/{id}")]
+        public IActionResult AbortSocket(string id, CancellationToken token)
+        {
+            var connections = ConnectionMonitor.Instance.GetConnections();
+            var selected = connections.Single(n => n.ConnectionId == id);
+            ConnectionMonitor.Instance.AbortConnection(selected);
+            return Ok(FromConnection(selected));
+        }
 
-//        // PUT api/<BackendController>/5
-//        [HttpPut("{id}")]
-//        public void Put(int id, [FromBody] string value)
-//        {
-//        }
+        public ConnectionViewModel FromConnection(TrackLifetimeConnectionContext context)
+        {
+            var result = new ConnectionViewModel();
+            result.Id = context.ConnectionId;
 
-//        // DELETE api/<BackendController>/5
-//        [HttpDelete("{id}")]
-//        public void Delete(int id)
-//        {
-//        }
+            var webSocket = context.GetWebSocketConnectionContext().UnderlyingWebSocket;
+            if (webSocket != null)
+            {
+                result.SocketState = webSocket.State.ToString();
+                
+            }
 
-//        public ConnectionViewModel FromConnection(TrackLifetimeConnectionContext context)
-//        {
-//            var result = new ConnectionViewModel();
-//            result.Id = context.ConnectionId;
-//            var webSocket = context.GetWebSocketConnectionContext().UnderlyingWebSocket;
-//            if (webSocket != null)
-//            {
-//                result.SocketState = webSocket.State.ToString();
-//            }
+            return result;
+        }
 
-//            return result;
-//        }
-
-//        public class ConnectionViewModel
-//        {
-//            public string Id { get; set; }
-//            public string SocketState { get; set; }
-//        }
-//    }
-//}
+        public class ConnectionViewModel
+        {
+            public string Id { get; set; }
+            public string SocketState { get; set; }
+        }
+    }
+}

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Http.Connections.Client;
 
-internal class WebSocketConnectionContext : HttpConnection
+public class WebSocketConnectionContext : HttpConnection
 {
     private readonly CancellationTokenSource _cts = new();
     private WebSocket? _underlyingWebSocket;
@@ -31,6 +31,7 @@ internal class WebSocketConnectionContext : HttpConnection
         _underlyingWebSocket?.Abort();
     }
 
+    public WebSocket? UnderlyingWebSocket => _underlyingWebSocket;
     public override ValueTask DisposeAsync()
     {
         // REVIEW: Why doesn't dispose just work?
@@ -51,14 +52,20 @@ internal class WebSocketConnectionContext : HttpConnection
             {
                 underlyingWebSocket = new ClientWebSocket();
                 underlyingWebSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                underlyingWebSocket.Options.CollectHttpResponseDetails = true;
+                
                 await underlyingWebSocket.ConnectAsync(context.Uri, cancellationToken);
+                
                 return underlyingWebSocket;
-            }
+            },
+            
         };
 
         var connection = new WebSocketConnectionContext(options);
+        
         await connection.StartAsync(TransferFormat.Binary, cancellationToken);
         connection._underlyingWebSocket = underlyingWebSocket;
+
         return connection;
     }
 }

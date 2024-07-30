@@ -14,6 +14,7 @@ namespace Frontend.API
         [HttpGet("Sockets")]
         public List<SocketModel> GetSockets()
         {
+            ConnectionMonitorService.RefreshSockets();
             var result = ConnectionMonitorService.GetSocketModels().OrderBy(n => n.Created).ToList();
 
             return result;

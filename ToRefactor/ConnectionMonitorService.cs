@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -22,29 +23,34 @@ namespace ToRefactor
         {
             //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorConnections()));
         }
-        public static void UpsertWebsocket(string key, WebSocket webSocket)
+        public static void UpsertWebsocket(HttpContext context,WebSocket webSocket)
         {
+      
+            _webSockets[context.Connection.Id] = webSocket;
+            //if(_webSockets.ContainsKey(key))
+            //    _webSockets[key] = webSocket;
+            //else
+            //{
+            //    _webSockets.Add(key,webSocket);
+            //}
 
-            if(_webSockets.ContainsKey(key))
-                _webSockets[key] = webSocket;
-            else
-            {
-                _webSockets.Add(key,webSocket);
-            }
-
-            UpsertSocketModel(key,webSocket);
+            UpsertSocketModel(context,webSocket);
         }
 
-        private static void UpsertSocketModel(string key, WebSocket webSocket)
+        private static void UpsertSocketModel(HttpContext context, WebSocket webSocket)
         {
+            var key = context.Connection.Id;
             var model = _socketModels.SingleOrDefault(n => n.Id == key);
-
+            
             if (model == null)
             {
                 var dt = DateTime.Now;
                 model = new SocketModel
                 {
-                    Created = DateTime.Now, CreatedDisplay = $"{dt.Hour}:{dt.Minute}:{dt.Second}:{dt.Microsecond}",
+                    Created = DateTime.Now,
+                    CreatedDisplay =
+                        $"{dt.Hour}:{dt.Minute.ToString().PadLeft(2, '0')} {dt.Second.ToString().PadLeft(2, '0')}.{dt.Millisecond.ToString().PadLeft(4, '0')}",
+                    RemotePort = context.Connection.RemotePort,
                     Id = key
                 };
                 _socketModels.Add(model);
@@ -58,6 +64,17 @@ namespace ToRefactor
             return _socketModels.OrderBy(n=>n.Created).ToList();
         }
 
+        public static void RefreshSockets()
+        {
+            foreach (var webSocket in _webSockets)
+            {
+                var socketModel = _socketModels.SingleOrDefault(n => n.Id == webSocket.Key);
+                if (socketModel != null)
+                {
+                    socketModel.State = webSocket.Value.State.ToString();
+                }
+            }
+        }
 
         static async Task MonitorConnections()
         {
