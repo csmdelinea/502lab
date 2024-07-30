@@ -18,7 +18,7 @@ namespace ToRefactor
                 Console.WriteLine($"{header.Key}: {header.Value}");
             }
 
-            if (context.Response.StatusCode == (int)HttpStatusCode.BadGateway)
+            if (context.Response.StatusCode != 200)
             {
                 var x = "Y";
             }

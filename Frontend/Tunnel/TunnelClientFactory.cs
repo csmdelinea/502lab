@@ -79,8 +79,15 @@ internal class TunnelClientFactory : ForwarderHttpClientFactory
                 }
                 catch (Exception ex)
                 {
-                    //ConnectionTrackingLogger.LogException<TunnelClientFactory>(ex,"None",$"Exception during Connect Callback");
                     throw;
+                    //_clusterConnections.TryRemove(context.DnsEndPoint.Host,out pair);
+                    ////handler.Dispose();
+                    //var client = new HttpClient();
+                    //await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                    //    new Uri("https://localhost:7244/connect-ws?host=backend1.app")));
+                    //await previous(context, cancellationToken);
+                    //ConnectionTrackingLogger.LogException<TunnelClientFactory>(ex,"None",$"Exception during Connect Callback");
+
                 }
             }
             return await previous(context, cancellationToken);

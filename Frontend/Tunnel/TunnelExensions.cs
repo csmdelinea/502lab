@@ -87,6 +87,7 @@ public static class TunnelExensions
             //    _sockets.Add(socketModel);
             //    _webSockets.TryAdd(socketModel.Id, ws);
             //}
+
             ConnectionMonitorService.UpsertWebsocket(context,ws);
             //ConnectionMonitorService.
             var stream = new WebSocketStream(context.Connection.Id,ws);
@@ -125,7 +126,7 @@ public static class TunnelExensions
 
     public static  void StartCleanup()
     {
-        
+        Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(15), () => SocketSnapshot()));
         //Task.WaitAll([RunPeriodicTaskAsync(TimeSpan.FromSeconds(30), () => CleanupConnections())]);
     }
     private static async Task CleanupConnections()

@@ -24,6 +24,7 @@ app.MapReverseProxy();
 //app.MapReverseProxy(proxyPipeline =>
 //{
 //    // Use a custom proxy middleware, defined below
+//    proxyPipeline.UseExceptionHandlingMiddleware();
 //    proxyPipeline.Use(DiagnosticPipeline.DiagnosticPipelineStep);
 //    // Don't forget to include these two middleware when you make a custom proxy pipeline (if you need them).
 //    proxyPipeline.UseSessionAffinity();
@@ -43,6 +44,7 @@ app.UseRouting();
 app.MapControllers();
 ConnectionMonitorService.StartMonitor();
 //Task.Run(() => TunnelExensions.StartCleanup());
-
+//app.Use(DiagnosticPipeline.DiagnosticPipelineStep);
+//app.UseExceptionHandlingMiddleware();
 app.Run();
 //Task.WaitAll([TunnelExensions.StartCleanup(),app.RunAsync()]);

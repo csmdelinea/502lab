@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.WebSockets;
 using Backend.Monitor;
 using Microsoft.AspNetCore.Connections;
+using ToRefactor;
 
 /// <summary>
 /// This has the core logic that creates and maintains connections to the proxy.
@@ -9,7 +11,8 @@ using Microsoft.AspNetCore.Connections;
 internal class TunnelConnectionListener : IConnectionListener
 {
     private readonly SemaphoreSlim _connectionLock;
-    private readonly ConcurrentDictionary<ConnectionContext, ConnectionContext> _connections = new();
+    private readonly ConcurrentDictionary<ConnectionContext, TrackLifetimeConnectionContext> _connections = new();
+
     private readonly TunnelOptions _options;
     private readonly CancellationTokenSource _closedCts = new();
     private readonly HttpMessageInvoker _httpMessageInvoker = new(new SocketsHttpHandler
@@ -29,6 +32,7 @@ internal class TunnelConnectionListener : IConnectionListener
         {
             throw new NotSupportedException($"UriEndPoint is required for {options.Transport} transport");
         }
+        //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(15), () => MonitorConnections()));
     }
 
     public EndPoint EndPoint { get; }
@@ -65,8 +69,10 @@ internal class TunnelConnectionListener : IConnectionListener
                         // When the connection is disposed, release it
                         await connection.ExecutionTask;
 
+                        //var webSocket = connection.GetWebSocketConnectionContext();
+                    
                         _connections.TryRemove(connection, out _);
-
+ 
                         // Allow more connections in
                         _connectionLock.Release();
                     },
@@ -115,5 +121,35 @@ internal class TunnelConnectionListener : IConnectionListener
         }
 
         return ValueTask.CompletedTask;
+    }
+
+    async Task MonitorConnections()
+    {
+        foreach (var connection in _connections)
+        {
+            var webSocket = connection.Value.GetWebSocketConnectionContext();
+            if (webSocket.UnderlyingWebSocket != null)
+            {
+                ConnectionTrackingLogger.LogWebSocket<TunnelConnectionListener>(webSocket.UnderlyingWebSocket, connection.Value.ConnectionId, "Connection Monitor task");
+                try
+                {
+                    await webSocket.UnderlyingWebSocket.SendAsync(new ArraySegment<byte>(Array.Empty<byte>()),
+                        WebSocketMessageType.Binary, true, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    var x = "y";
+                }
+            }
+        }
+    }
+    async Task RunPeriodicTaskAsync(TimeSpan interval, Func<Task> action)
+    {
+        while (true)
+        {
+            var delayTask = Task.Delay(interval);
+            await delayTask;
+            await action();
+        }
     }
 }

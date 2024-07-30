@@ -14,18 +14,18 @@ namespace ToRefactor
 
         private ConnectionMonitorService()
         {
-            
+
         }
         private static List<SocketModel> _socketModels = new List<SocketModel>();
         private static Dictionary<string, WebSocket> _webSockets = new();
 
         public static void StartMonitor()
         {
-            //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => MonitorConnections()));
+            //Task.Run(() => RunPeriodicTaskAsync(TimeSpan.FromSeconds(10), () => PingWebSockets()));
         }
-        public static void UpsertWebsocket(HttpContext context,WebSocket webSocket)
+        public static void UpsertWebsocket(HttpContext context, WebSocket webSocket)
         {
-      
+
             _webSockets[context.Connection.Id] = webSocket;
             //if(_webSockets.ContainsKey(key))
             //    _webSockets[key] = webSocket;
@@ -34,14 +34,14 @@ namespace ToRefactor
             //    _webSockets.Add(key,webSocket);
             //}
 
-            UpsertSocketModel(context,webSocket);
+            UpsertSocketModel(context, webSocket);
         }
 
         private static void UpsertSocketModel(HttpContext context, WebSocket webSocket)
         {
             var key = context.Connection.Id;
             var model = _socketModels.SingleOrDefault(n => n.Id == key);
-            
+
             if (model == null)
             {
                 var dt = DateTime.Now;
@@ -61,7 +61,7 @@ namespace ToRefactor
 
         public static List<SocketModel> GetSocketModels()
         {
-            return _socketModels.OrderBy(n=>n.Created).ToList();
+            return _socketModels.OrderBy(n => n.Created).ToList();
         }
 
         public static void RefreshSockets()
@@ -76,55 +76,86 @@ namespace ToRefactor
             }
         }
 
-        static async Task MonitorConnections()
+        static async Task SocketSnapshot()
         {
-            ConnectionTrackingLogger.LogMessage<ConnectionMonitorService>("Monitor",$"Running Monitor on {_webSockets.Count} Connections");
             foreach (var webSocket in _webSockets)
             {
+
+                ConnectionTrackingLogger.LogWebSocket<ConnectionMonitorService>(webSocket.Value, webSocket.Key, "Connection Snapshot");
+          
+            }
+        }
+        static async Task PingWebSockets()
+        {
+            foreach (var webSocket in _webSockets)
+            {
+
+                ConnectionTrackingLogger.LogWebSocket<ConnectionMonitorService>(webSocket.Value, webSocket.Key, "Connection Monitor task");
                 try
                 {
-                    _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
-                    if (webSocket.Value.State == WebSocketState.Open)
-                    {
-                        var bytes = Array.Empty<byte>();
-                        await webSocket.Value.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary,
-                            false,
-                            CancellationToken.None);
-                    }else if (webSocket.Value.State != WebSocketState.Aborted)
-                    {
-                        webSocket.Value.Dispose();
+                    await webSocket.Value.SendAsync(new ArraySegment<byte>(Array.Empty<byte>()),
+                        WebSocketMessageType.Binary, true, CancellationToken.None);
 
-                    }
-                    _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
+                    //var b = new byte[4096];
+                    //var receiveResult = await webSocket.Value.ReceiveAsync()
                 }
-                catch (WebSocketException ex)
+                catch (Exception ex)
                 {
-                    ConnectionTrackingLogger.LogException<ConnectionMonitorService>(ex, webSocket.Key,"Exception Encountered running monitor");
-                    //await webSocket.Value.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Normal",
-                    //    CancellationToken.None);
-              
+                    var x = "y";
+                }
+            }
+        }
+    
+    static async Task MonitorConnections()
+    {
+        ConnectionTrackingLogger.LogMessage<ConnectionMonitorService>("Monitor", $"Running Monitor on {_webSockets.Count} Connections");
+        foreach (var webSocket in _webSockets)
+        {
+            try
+            {
+                _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
+                if (webSocket.Value.State == WebSocketState.Open)
+                {
+                    var bytes = Array.Empty<byte>();
+                    await webSocket.Value.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary,
+                        false,
+                        CancellationToken.None);
+                }
+                else if (webSocket.Value.State != WebSocketState.Aborted)
+                {
                     webSocket.Value.Dispose();
-                    _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
 
                 }
-                //if (webSocket.Value.State != WebSocketState.Open)
-                //{
-                //    ConnectionTrackingLogger.LogWebSocket<ConnectionMonitorService>(webSocket.Value, webSocket.Key, "Socket State Monitor");
-                //    if(webSocket.Value.State != WebSocketState.Aborted)
-                //        webSocket.Value.Dispose();
-                //}
-
+                _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
             }
-        }
-        static async Task RunPeriodicTaskAsync(TimeSpan interval, Func<Task> action)
-        {
-            while (true)
+            catch (WebSocketException ex)
             {
-                var delayTask = Task.Delay(interval);
-                await delayTask;
-                await action();
-            }
-        }
+                ConnectionTrackingLogger.LogException<ConnectionMonitorService>(ex, webSocket.Key, "Exception Encountered running monitor");
+                //await webSocket.Value.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Normal",
+                //    CancellationToken.None);
 
+                webSocket.Value.Dispose();
+                _socketModels.Single(n => n.Id == webSocket.Key).State = webSocket.Value.State.ToString();
+
+            }
+            //if (webSocket.Value.State != WebSocketState.Open)
+            //{
+            //    ConnectionTrackingLogger.LogWebSocket<ConnectionMonitorService>(webSocket.Value, webSocket.Key, "Socket State Monitor");
+            //    if(webSocket.Value.State != WebSocketState.Aborted)
+            //        webSocket.Value.Dispose();
+            //}
+
+        }
     }
+    static async Task RunPeriodicTaskAsync(TimeSpan interval, Func<Task> action)
+    {
+        while (true)
+        {
+            var delayTask = Task.Delay(interval);
+            await delayTask;
+            await action();
+        }
+    }
+
+}
 }

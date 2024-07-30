@@ -32,16 +32,19 @@ var app = builder.Build();
 app.UseStaticFiles();
 app.UseRouting();
 app.MapControllers();
-//app.UseHttpLogging();
-app.MapReverseProxy(proxyPipeline =>
-{
-    // Use a custom proxy middleware, defined below
-    proxyPipeline.Use(DiagnosticPipeline.DiagnosticPipelineStep);
-    // Don't forget to include these two middleware when you make a custom proxy pipeline (if you need them).
-    proxyPipeline.UseSessionAffinity();
-    proxyPipeline.UseLoadBalancing();
-});
 
-//app.MapReverseProxy();
+
+//app.MapReverseProxy(proxyPipeline =>
+//{
+//    // Use a custom proxy middleware, defined below
+//    proxyPipeline.UseExceptionHandlingMiddleware();
+//    proxyPipeline.Use(DiagnosticPipeline.DiagnosticPipelineStep);
+//    // Don't forget to include these two middleware when you make a custom proxy pipeline (if you need them).
+//    proxyPipeline.UseSessionAffinity();
+//    proxyPipeline.UseLoadBalancing();
+//});
+//app.Use(DiagnosticPipeline.DiagnosticPipelineStep);
+//app.UseExceptionHandlingMiddleware();
+app.MapReverseProxy();
 
 app.Run();
